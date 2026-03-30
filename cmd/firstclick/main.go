@@ -203,5 +203,7 @@ func main() {
 	})
 
 	slog.Info("Server is running on port 8080", "port", "8080")
-	router.Run(":8080")
+	if err := router.Run(":8080"); err != nil {
+		slog.Error("Failed to start server", "error", err)
+	}
 }
