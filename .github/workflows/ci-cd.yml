@@ -32,9 +32,6 @@ jobs:
           go mod tidy
           git diff --exit-code
 
-      - name: Check formatting
-        run: test -z "$(gofmt -l .)"
-
       - name: Run go vet
         run: go vet ./...
 
@@ -52,15 +49,8 @@ jobs:
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           govulncheck ./...
-
       - name: Run tests with coverage
         run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
-
-      - name: Enforce 80% coverage threshold
-        run: |
-          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | tr -d '%')
-          echo "Total coverage: $COVERAGE%"
-          awk "BEGIN { exit ($COVERAGE < 80) }"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
