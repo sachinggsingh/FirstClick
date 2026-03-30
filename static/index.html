@@ -1,0 +1,1313 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0b0b0e;
+        --bg2: #13131a;
+        --surface: #1c1c26;
+        --surface2: #252532;
+        --border: rgba(255,255,255,0.08);
+        --border-hover: rgba(255,255,255,0.18);
+        --text: #f0f0f8;
+        --text-muted: #7878a0;
+        --text-dim: #4a4a6a;
+        --available: #1e1e2e;
+        --available-hover: #2a2a3e;
+        --held-mine: #f5a623;
+        --held-other: #e8651a;
+        --confirmed: #e03c3c;
+        --accent: #7c6af7;
+        --accent2: #a78bfa;
+        --accent-glow: rgba(124,106,247,0.25);
+        --success: #22c97a;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --font: "Syne", sans-serif;
+        --mono: "DM Mono", monospace;
+        --radius: 12px;
+        --shadow: 0 4px 24px rgba(0,0,0,0.4);
+        --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      [data-theme="light"] {
+        --bg: #f5f5fa;
+        --bg2: #ebebf5;
+        --surface: #ffffff;
+        --surface2: #f0f0f8;
+        --border: rgba(0,0,0,0.08);
+        --border-hover: rgba(0,0,0,0.18);
+        --text: #0f0f1a;
+        --text-muted: #6060a0;
+        --text-dim: #a0a0c0;
+        --available: #e8e8f8;
+        --available-hover: #d8d8f0;
+        --held-mine: #f5a623;
+        --held-other: #e8651a;
+        --confirmed: #e03c3c;
+        --accent: #5b48e8;
+        --accent2: #7c6af7;
+        --accent-glow: rgba(91,72,232,0.15);
+        --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        transition: background var(--transition), color var(--transition);
+        overflow-x: hidden;
+      }
+
+      /* Background decoration */
+      body::before {
+        content: '';
+        position: fixed;
+        top: -200px;
+        right: -200px;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ── Toast System ── */
+      #toast-container {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        pointer-events: none;
+      }
+
+      .toast {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0.85rem 1.1rem;
+        min-width: 280px;
+        max-width: 360px;
+        box-shadow: var(--shadow);
+        pointer-events: auto;
+        animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        font-size: 0.82rem;
+        font-family: var(--mono);
+      }
+
+      .toast.removing {
+        animation: toastOut 0.25s ease forwards;
+      }
+
+      .toast-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      }
+
+      .toast-body { flex: 1; }
+      .toast-title { font-weight: 600; font-size: 0.8rem; margin-bottom: 0.1rem; font-family: var(--font); }
+      .toast-msg { color: var(--text-muted); font-size: 0.75rem; }
+
+      .toast-close {
+        background: none;
+        border: none;
+        color: var(--text-dim);
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 2px;
+        transition: color var(--transition);
+      }
+      .toast-close:hover { color: var(--text); }
+
+      .toast--success { border-left: 3px solid var(--success); }
+      .toast--error   { border-left: 3px solid var(--danger); }
+      .toast--warning { border-left: 3px solid var(--warning); }
+      .toast--info    { border-left: 3px solid var(--accent); }
+
+      .toast-progress {
+        position: absolute;
+        bottom: 0; left: 0;
+        height: 2px;
+        border-radius: 0 0 10px 10px;
+        animation: toastProgress linear forwards;
+      }
+      .toast--success .toast-progress { background: var(--success); }
+      .toast--error   .toast-progress { background: var(--danger); }
+      .toast--warning .toast-progress { background: var(--warning); }
+      .toast--info    .toast-progress { background: var(--accent); }
+
+      @keyframes toastIn {
+        from { opacity: 0; transform: translateX(2rem) scale(0.95); }
+        to   { opacity: 1; transform: translateX(0) scale(1); }
+      }
+      @keyframes toastOut {
+        from { opacity: 1; transform: translateX(0); max-height: 80px; }
+        to   { opacity: 0; transform: translateX(2rem); max-height: 0; padding: 0; margin: 0; }
+      }
+      @keyframes toastProgress {
+        from { width: 100%; }
+        to   { width: 0%; }
+      }
+
+      /* ── Header ── */
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        background: rgba(var(--bg-rgb, 11,11,14), 0.85);
+        border-bottom: 1px solid var(--border);
+        padding: 0 2rem;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .header-left { display: flex; align-items: center; gap: 1rem; }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        text-decoration: none;
+      }
+
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+      }
+
+      .logo-text {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--text);
+      }
+
+      .logo-text span { color: var(--accent2); }
+
+      .connection-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.7rem;
+        font-family: var(--mono);
+        color: var(--text-muted);
+        background: var(--surface);
+        padding: 0.25rem 0.7rem;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+      }
+
+      .connection-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-dim);
+        transition: background var(--transition);
+      }
+      .connection-dot.live { background: var(--success); box-shadow: 0 0 6px var(--success); }
+      .connection-dot.reconnecting { background: var(--warning); animation: pulse 1s infinite; }
+
+      .header-right { display: flex; align-items: center; gap: 0.75rem; }
+
+      .user-badge {
+        font-size: 0.7rem;
+        font-family: var(--mono);
+        color: var(--text-muted);
+        background: var(--surface);
+        padding: 0.3rem 0.75rem;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .user-badge::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      .theme-toggle {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: all var(--transition);
+        color: var(--text);
+      }
+
+      .theme-toggle:hover {
+        background: var(--surface2);
+        border-color: var(--border-hover);
+        transform: rotate(20deg);
+      }
+
+      /* ── Main Container ── */
+      .container {
+        position: relative;
+        z-index: 1;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      /* ── Section Headers ── */
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .section-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-dim);
+        font-family: var(--mono);
+      }
+
+      .section-line {
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      /* ── Movie Cards ── */
+      .movies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .movie-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.4rem;
+        cursor: pointer;
+        transition: all var(--transition);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .movie-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--accent-glow), transparent);
+        opacity: 0;
+        transition: opacity var(--transition);
+      }
+
+      .movie-card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      .movie-card:hover::before { opacity: 1; }
+
+      .movie-card.selected {
+        border-color: var(--accent);
+        background: var(--surface2);
+        box-shadow: 0 0 0 1px var(--accent), 0 4px 24px var(--accent-glow);
+      }
+
+      .movie-card.selected::before { opacity: 1; }
+
+      .movie-card-num {
+        font-size: 0.65rem;
+        font-family: var(--mono);
+        color: var(--text-dim);
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+      }
+
+      .movie-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+      }
+
+      .movie-meta {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+      }
+
+      .movie-tag {
+        font-size: 0.62rem;
+        font-family: var(--mono);
+        color: var(--text-muted);
+        background: var(--available);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+
+      .movie-selected-indicator {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent);
+        display: none;
+      }
+
+      .movie-card.selected .movie-selected-indicator { display: block; }
+
+      /* ── Theater Area ── */
+      .theater-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 2rem;
+        align-items: flex-start;
+      }
+
+      @media (max-width: 900px) {
+        .theater-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── Screen ── */
+      .screen-wrapper {
+        margin-bottom: 2rem;
+      }
+
+      .screen-label {
+        text-align: center;
+        font-size: 0.62rem;
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--text-dim);
+        margin-bottom: 0.75rem;
+      }
+
+      .screen-bar {
+        height: 4px;
+        background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent2) 70%, transparent 100%);
+        border-radius: 4px;
+        margin: 0 3rem;
+        box-shadow: 0 0 20px var(--accent-glow);
+      }
+
+      /* ── Seat Grid ── */
+      .seat-area {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.75rem;
+        overflow-x: auto;
+      }
+
+      .seat-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .seat-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+
+      .row-label {
+        width: 1.75rem;
+        font-size: 0.65rem;
+        font-family: var(--mono);
+        color: var(--text-dim);
+        text-align: center;
+        font-weight: 500;
+      }
+
+      .seat {
+        width: 38px;
+        height: 34px;
+        border-radius: 7px 7px 4px 4px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        font-size: 0.6rem;
+        font-family: var(--mono);
+        font-weight: 500;
+        color: var(--text-dim);
+        background: var(--available);
+        transition: all var(--transition);
+        position: relative;
+      }
+
+      .seat:hover:not(.seat--held-mine):not(.seat--held-other):not(.seat--confirmed):not(:disabled) {
+        background: var(--available-hover);
+        border-color: var(--accent);
+        color: var(--accent);
+        transform: translateY(-3px) scale(1.1);
+        box-shadow: 0 4px 12px var(--accent-glow);
+      }
+
+      .seat--held-mine {
+        background: var(--held-mine);
+        color: #000;
+        cursor: default;
+        border-color: transparent;
+        box-shadow: 0 0 10px rgba(245,166,35,0.4);
+        animation: pulseHeld 2s ease infinite;
+      }
+
+      .seat--held-other {
+        background: var(--held-other);
+        color: #fff;
+        cursor: not-allowed;
+        border-color: transparent;
+      }
+
+      .seat--confirmed {
+        background: var(--confirmed);
+        color: #fff;
+        cursor: not-allowed;
+        border-color: transparent;
+        opacity: 0.8;
+      }
+
+      @keyframes pulseHeld {
+        0%, 100% { box-shadow: 0 0 8px rgba(245,166,35,0.4); }
+        50%       { box-shadow: 0 0 16px rgba(245,166,35,0.7); }
+      }
+
+      /* ── Legend ── */
+      .legend {
+        display: flex;
+        gap: 1.2rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.68rem;
+        font-family: var(--mono);
+        color: var(--text-muted);
+      }
+
+      .legend-swatch {
+        width: 16px;
+        height: 14px;
+        border-radius: 4px 4px 2px 2px;
+        border: 1px solid transparent;
+      }
+
+      /* ── Checkout Panel ── */
+      .checkout-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: all var(--transition);
+      }
+
+      .checkout-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .checkout-header h3 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .checkout-badge {
+        font-size: 0.65rem;
+        font-family: var(--mono);
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        background: var(--accent-glow);
+        color: var(--accent2);
+        border: 1px solid var(--accent);
+      }
+
+      .checkout-body { padding: 1.5rem; }
+
+      .checkout-seat-display {
+        text-align: center;
+        padding: 1.5rem;
+        background: var(--bg2);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-bottom: 1.25rem;
+      }
+
+      .seat-display-label {
+        font-size: 0.62rem;
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-dim);
+        margin-bottom: 0.4rem;
+      }
+
+      .seat-display-id {
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: var(--held-mine);
+        line-height: 1;
+      }
+
+      .checkout-info-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .checkout-info-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.78rem;
+      }
+
+      .checkout-info-row .label {
+        color: var(--text-muted);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+      }
+
+      .checkout-info-row .value {
+        font-weight: 600;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--text);
+      }
+
+      /* ── Timer ── */
+      .timer-block {
+        background: var(--bg2);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1.25rem;
+      }
+
+      .timer-label {
+        font-size: 0.62rem;
+        font-family: var(--mono);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-dim);
+        margin-bottom: 0.3rem;
+      }
+
+      .timer {
+        font-size: 2.2rem;
+        font-weight: 800;
+        font-family: var(--mono);
+        color: var(--held-mine);
+        letter-spacing: -0.03em;
+        transition: color 0.5s;
+        line-height: 1;
+      }
+
+      .timer.urgent { color: var(--danger); }
+
+      .timer-bar-track {
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        margin-top: 0.75rem;
+        overflow: hidden;
+      }
+
+      .timer-bar-fill {
+        height: 100%;
+        background: var(--held-mine);
+        border-radius: 2px;
+        transition: width 1s linear, background 0.5s;
+      }
+
+      .timer-bar-fill.urgent { background: var(--danger); }
+
+      /* ── Buttons ── */
+      .btn-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-family: var(--font);
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all var(--transition);
+        position: relative;
+        overflow: hidden;
+        letter-spacing: 0.01em;
+      }
+
+      .btn::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: white;
+        opacity: 0;
+        transition: opacity var(--transition);
+      }
+
+      .btn:hover::after { opacity: 0.08; }
+      .btn:active { transform: scale(0.97); }
+
+      .btn--confirm {
+        background: linear-gradient(135deg, #22c97a, #16a563);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(34,201,122,0.3);
+      }
+
+      .btn--release {
+        background: var(--surface2);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .btn--release:hover { border-color: var(--danger); color: var(--danger); }
+
+      /* ── Empty States ── */
+      .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-dim);
+      }
+
+      .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+      }
+
+      .empty-state p {
+        font-size: 0.85rem;
+        font-family: var(--mono);
+      }
+
+      .empty-checkout {
+        padding: 3rem 1.5rem;
+        text-align: center;
+      }
+
+      .empty-checkout-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        opacity: 0.3;
+      }
+
+      .empty-checkout p {
+        font-size: 0.75rem;
+        font-family: var(--mono);
+        color: var(--text-dim);
+        line-height: 1.6;
+      }
+
+      /* ── Loading ── */
+      .skeleton {
+        background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 8px;
+      }
+
+      @keyframes shimmer {
+        from { background-position: 200% 0; }
+        to   { background-position: -200% 0; }
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.4; }
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 600px) {
+        header { padding: 0 1rem; }
+        .container { padding: 1rem; }
+        .movies-grid { grid-template-columns: 1fr 1fr; }
+        .seat { width: 30px; height: 27px; font-size: 0.55rem; }
+        #toast-container { left: 1rem; right: 1rem; }
+        .toast { min-width: unset; }
+        .connection-badge { display: none; }
+      }
+
+      @media (max-width: 400px) {
+        .movies-grid { grid-template-columns: 1fr; }
+        .seat { width: 26px; height: 24px; }
+      }
+
+      /* ── Stats Bar ── */
+      .stats-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+      }
+
+      .stat-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.7rem;
+        font-family: var(--mono);
+        color: var(--text-muted);
+        background: var(--surface);
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+      }
+
+      .stat-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toast-container"></div>
+
+    <header>
+      <div class="header-left">
+        <a class="logo" href="#">
+          <div class="logo-icon">🎬</div>
+          <span class="logo-text">Cine<span>Book</span></span>
+        </a>
+        <div class="connection-badge">
+          <div class="connection-dot" id="connDot"></div>
+          <span id="connLabel">connecting…</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="user-badge" id="userBadge"></div>
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Now Showing</span>
+        <div class="section-line"></div>
+      </div>
+
+      <div class="movies-grid" id="movieList"></div>
+
+      <div id="theaterSection" style="display:none">
+        <div class="section-header">
+          <span class="section-label">Select Seat</span>
+          <div class="section-line"></div>
+        </div>
+
+        <div class="theater-layout">
+          <div>
+            <div class="screen-wrapper">
+              <div class="screen-label">▲ Screen This Way ▲</div>
+              <div class="screen-bar"></div>
+            </div>
+
+            <div class="seat-area">
+              <div class="stats-bar" id="statsBar"></div>
+              <div class="seat-grid" id="seatGrid"></div>
+              <div class="legend">
+                <div class="legend-item">
+                  <div class="legend-swatch" style="background:var(--available);border-color:var(--border)"></div>
+                  Available
+                </div>
+                <div class="legend-item">
+                  <div class="legend-swatch" style="background:var(--held-mine)"></div>
+                  Your Hold
+                </div>
+                <div class="legend-item">
+                  <div class="legend-swatch" style="background:var(--held-other)"></div>
+                  Other Hold
+                </div>
+                <div class="legend-item">
+                  <div class="legend-swatch" style="background:var(--confirmed)"></div>
+                  Confirmed
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="sidePanel">
+            <div class="checkout-panel" id="checkoutPanel">
+              <div class="checkout-header">
+                <h3>Checkout</h3>
+                <span class="checkout-badge" id="checkoutBadge" style="display:none">Holding</span>
+              </div>
+              <div id="checkoutBody">
+                <div class="empty-checkout">
+                  <div class="empty-checkout-icon">🪑</div>
+                  <p>Tap any available<br>seat to hold it</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      // ── State ──
+      const userID = crypto.randomUUID().replace(/-/g,'').slice(0,12);
+      document.getElementById('userBadge').textContent = userID.slice(0,8) + '…';
+
+      // If someone opens this page from a different dev-server port (e.g. 3000),
+      // we still want it to talk to the booking backend running on 8080.
+      const BACKEND_ORIGIN =
+        location.port === '8080' ? location.origin : 'http://localhost:8080';
+
+      let movies = [], selectedMovie = null, activeSession = null;
+      let timerInterval = null, timerDuration = 0, timerStart = null;
+      let ws = null, wsReconnectTimeout = null;
+
+      // ── Theme ──
+      const themeToggle = document.getElementById('themeToggle');
+      let isDark = true;
+
+      function setTheme(dark) {
+        isDark = dark;
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        themeToggle.textContent = dark ? '🌙' : '☀️';
+        localStorage.setItem('cinebook-theme', dark ? 'dark' : 'light');
+      }
+
+      const savedTheme = localStorage.getItem('cinebook-theme');
+      if (savedTheme) setTheme(savedTheme === 'dark');
+
+      themeToggle.addEventListener('click', () => setTheme(!isDark));
+
+      // ── Toast ──
+      function toast(type, title, msg, duration = 4000) {
+        const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = `toast toast--${type}`;
+        el.style.position = 'relative';
+        el.innerHTML = `
+          <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+          <div class="toast-body">
+            <div class="toast-title">${escapeHtml(title)}</div>
+            ${msg ? `<div class="toast-msg">${escapeHtml(msg)}</div>` : ''}
+          </div>
+          <button class="toast-close" onclick="this.closest('.toast').remove()">✕</button>
+          <div class="toast-progress" style="animation-duration:${duration}ms"></div>
+        `;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.classList.add('removing');
+          setTimeout(() => el.remove(), 300);
+        }, duration);
+        return el;
+      }
+
+      // ── WebSocket ──
+      function connectWS() {
+        try {
+          const wsProto = BACKEND_ORIGIN.startsWith('https') ? 'wss' : 'ws';
+          const backendHost = BACKEND_ORIGIN.replace(/^https?:\/\//, '');
+          ws = new WebSocket(`${wsProto}://${backendHost}/ws/seats`);
+
+          ws.onopen = () => {
+            setConn('live', 'live');
+          };
+
+          ws.onmessage = (e) => {
+            try {
+              const msg = JSON.parse(e.data);
+              if (msg.type === 'SEATS_UPDATED' && selectedMovie &&
+                  (!msg.movie_id || msg.movie_id === selectedMovie.id)) {
+                fetchSeats();
+              }
+            } catch {}
+          };
+
+          ws.onclose = () => {
+            setConn('reconnecting', 'reconnecting…');
+            if (wsReconnectTimeout) clearTimeout(wsReconnectTimeout);
+            wsReconnectTimeout = setTimeout(connectWS, 3000);
+          };
+
+          ws.onerror = () => {
+            setConn('', 'error');
+          };
+        } catch {
+          wsReconnectTimeout = setTimeout(connectWS, 3000);
+        }
+      }
+
+      function setConn(cls, label) {
+        const dot = document.getElementById('connDot');
+        const lbl = document.getElementById('connLabel');
+        dot.className = 'connection-dot' + (cls ? ' ' + cls : '');
+        lbl.textContent = label;
+      }
+
+      // ── API ──
+      function api(method, path, body) {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) opts.body = JSON.stringify(body);
+        return fetch(`${BACKEND_ORIGIN}${path}`, opts).then(r => {
+          if (r.status === 204) return null;
+          return r.json().then(data => {
+            if (!r.ok) throw new Error(data.error || 'Request failed');
+            return data;
+          });
+        });
+      }
+
+      // ── Movies ──
+      function loadMovies() {
+        api('GET', '/movies').then(data => {
+          movies = data;
+          renderMovies();
+        }).catch(() => {});
+      }
+
+      function renderMovies() {
+        const c = document.getElementById('movieList');
+        c.innerHTML = '';
+        movies.forEach((m, i) => {
+          const card = document.createElement('div');
+          card.className = 'movie-card' + (selectedMovie?.id === m.id ? ' selected' : '');
+          card.innerHTML = `
+            <div class="movie-card-num">0${i+1}</div>
+            <h3>${escapeHtml(m.title)}</h3>
+            <div class="movie-meta">
+              <span class="movie-tag">${m.rows} rows</span>
+              <span class="movie-tag">${m.seats_per_row} seats</span>
+              <span class="movie-tag">${m.rows * m.seats_per_row} total</span>
+            </div>
+            <div class="movie-selected-indicator"></div>
+          `;
+          card.addEventListener('click', () => selectMovie(m));
+          c.appendChild(card);
+        });
+      }
+
+      function selectMovie(movie) {
+        releaseActiveSession().then(() => {
+          selectedMovie = movie;
+          renderMovies();
+          document.getElementById('theaterSection').style.display = 'block';
+          resetCheckout();
+          fetchSeats();
+
+        });
+      }
+
+      // ── Seats ──
+      function fetchSeats() {
+        if (!selectedMovie) return;
+        api('GET', `/movies/${selectedMovie.id}/seats`).then(seats => {
+          renderGrid(seats);
+          renderStats(seats);
+        }).catch(() => {});
+      }
+
+      function renderStats(seats) {
+        const available = seats.filter(s => !s.booked && !s.confirmed).length;
+        const held      = seats.filter(s => s.booked && !s.confirmed).length;
+        const confirmed = seats.filter(s => s.confirmed).length;
+        const bar = document.getElementById('statsBar');
+        bar.innerHTML = `
+          <div class="stat-chip"><div class="stat-dot" style="background:var(--available-hover);border:1px solid var(--border)"></div>${available} available</div>
+          <div class="stat-chip"><div class="stat-dot" style="background:var(--held-other)"></div>${held} held</div>
+          <div class="stat-chip"><div class="stat-dot" style="background:var(--confirmed)"></div>${confirmed} confirmed</div>
+        `;
+      }
+
+      function renderGrid(statuses) {
+        const grid = document.getElementById('seatGrid');
+        grid.innerHTML = '';
+        const map = {};
+        statuses.forEach(s => map[s.seat_id] = s);
+
+        const rows = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        for (let r = 0; r < selectedMovie.rows; r++) {
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'seat-row';
+
+          const lbl = document.createElement('div');
+          lbl.className = 'row-label';
+          lbl.textContent = rows[r];
+          rowDiv.appendChild(lbl);
+
+          for (let s = 1; s <= selectedMovie.seats_per_row; s++) {
+            const seatID = rows[r] + s;
+            const btn = document.createElement('button');
+            btn.className = 'seat';
+            btn.textContent = s;
+            btn.dataset.seatId = seatID;
+
+            const info = map[seatID];
+            if (info) {
+              if (info.confirmed) {
+                btn.classList.add('seat--confirmed');
+                btn.disabled = true;
+                btn.title = 'Already confirmed';
+              } else if (info.booked && info.user_id === userID) {
+                btn.classList.add('seat--held-mine');
+                btn.title = 'Your hold';
+              } else if (info.booked) {
+                btn.classList.add('seat--held-other');
+                btn.disabled = true;
+                btn.title = 'Held by someone else';
+              }
+            }
+
+            (function(id) {
+              btn.addEventListener('click', () => holdSeat(id));
+            })(seatID);
+
+            rowDiv.appendChild(btn);
+          }
+
+          const lblR = document.createElement('div');
+          lblR.className = 'row-label';
+          lblR.textContent = rows[r];
+          rowDiv.appendChild(lblR);
+          grid.appendChild(rowDiv);
+        }
+      }
+
+      // ── Hold / Confirm / Release ──
+      function holdSeat(seatID) {
+        if (activeSession) {
+
+          return;
+        }
+        api('POST', `/movies/${selectedMovie.id}/seats/${seatID}/hold`, { user_id: userID })
+          .then(data => {
+            activeSession = {
+              sessionID: data.session_id,
+              movieID: data.movie_id,
+              seatID: data.seat_id,
+              expiresAt: new Date(data.expires_at),
+            };
+            timerDuration = Math.floor((activeSession.expiresAt - Date.now()) / 1000);
+            timerStart = Date.now();
+            fetchSeats();
+            renderCheckout();
+            startTimer();
+
+          })
+
+      }
+
+      function confirmSeat() {
+        if (!activeSession) return;
+        api('PUT', `/sessions/${activeSession.sessionID}/confirm`, { user_id: userID })
+          .then(() => {
+            clearTimerInterval();
+            const sid = activeSession.seatID;
+            activeSession = null;
+            fetchSeats();
+            resetCheckout();
+            toast('success', 'Booking Confirmed! 🎉', `Seat ${sid} is yours. Enjoy the show!`);
+          })
+          .catch(err => {
+            toast('error', 'Confirmation Failed', err.message);
+          });
+      }
+
+      function releaseSeat() {
+        if (!activeSession) return;
+        const sid = activeSession.sessionID;
+        const seatLabel = activeSession.seatID;
+        clearTimerInterval();
+        activeSession = null;
+        api('DELETE', `/sessions/${sid}`, { user_id: userID })
+          .then(() => {
+            fetchSeats();
+            resetCheckout();
+            toast('info', 'Hold Released', `Seat ${seatLabel} is now available again`);
+          })
+          .catch(() => {
+            fetchSeats();
+            resetCheckout();
+          });
+      }
+
+      function releaseActiveSession() {
+        if (!activeSession) return Promise.resolve();
+        const sid = activeSession.sessionID;
+        clearTimerInterval();
+        activeSession = null;
+        resetCheckout();
+        return api('DELETE', `/sessions/${sid}`, { user_id: userID }).catch(() => {});
+      }
+
+      // ── Checkout Render ──
+      function renderCheckout() {
+        if (!activeSession) return;
+        const badge = document.getElementById('checkoutBadge');
+        badge.style.display = 'inline-block';
+
+        document.getElementById('checkoutBody').innerHTML = `
+          <div class="checkout-body">
+            <div class="checkout-seat-display">
+              <div class="seat-display-label">Your Seat</div>
+              <div class="seat-display-id">${escapeHtml(activeSession.seatID)}</div>
+            </div>
+            <div class="checkout-info-grid">
+              <div class="checkout-info-row">
+                <span class="label">Movie</span>
+                <span class="value">${escapeHtml(activeSession.movieID)}</span>
+              </div>
+              <div class="checkout-info-row">
+                <span class="label">Session</span>
+                <span class="value">${activeSession.sessionID.slice(0,8)}…</span>
+              </div>
+            </div>
+            <div class="timer-block">
+              <div class="timer-label">Time Remaining</div>
+              <div class="timer" id="timer">--:--</div>
+              <div class="timer-bar-track">
+                <div class="timer-bar-fill" id="timerBar"></div>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn--confirm" id="btnConfirm">✓ Confirm</button>
+              <button class="btn btn--release" id="btnRelease">✕ Release</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('btnConfirm').addEventListener('click', confirmSeat);
+        document.getElementById('btnRelease').addEventListener('click', releaseSeat);
+      }
+
+      function resetCheckout() {
+        const badge = document.getElementById('checkoutBadge');
+        if (badge) badge.style.display = 'none';
+        document.getElementById('checkoutBody').innerHTML = `
+          <div class="empty-checkout">
+            <div class="empty-checkout-icon">🪑</div>
+            <p>Tap any available<br>seat to hold it</p>
+          </div>
+        `;
+      }
+
+      // ── Timer ──
+      function startTimer() {
+        clearTimerInterval();
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
+      }
+
+      function updateTimer() {
+        if (!activeSession) { clearTimerInterval(); return; }
+        const el = document.getElementById('timer');
+        const bar = document.getElementById('timerBar');
+        if (!el) return;
+
+        const remaining = Math.max(0, Math.floor((activeSession.expiresAt - Date.now()) / 1000));
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        el.textContent = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+
+        const pct = timerDuration > 0 ? (remaining / timerDuration) * 100 : 0;
+        if (bar) {
+          bar.style.width = pct + '%';
+          bar.classList.toggle('urgent', remaining < 60);
+        }
+
+        if (remaining < 60) {
+          el.classList.add('urgent');
+        } else {
+          el.classList.remove('urgent');
+        }
+
+        if (remaining <= 0) {
+          clearTimerInterval();
+          activeSession = null;
+          fetchSeats();
+          resetCheckout();
+          toast('error', 'Hold Expired', 'Your seat hold has expired. Please select again.');
+        }
+      }
+
+      function clearTimerInterval() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      }
+
+      // ── Util ──
+      function escapeHtml(str) {
+        if (!str) return '';
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+      }
+
+      // ── Init ──
+      connectWS();
+      loadMovies();
+    })();
+    </script>
+  </body>
+</html>
