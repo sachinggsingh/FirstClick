@@ -1,16 +1,13 @@
 # .goreleaser.yml
 version: 2
-
-before:
-  hooks:
-    - go mod tidy
+project_name: FirstClick
 
 builds:
   - id: firstclick
-    main: ./cmd/firstclick       
+    main: ./cmd/firstclick
     binary: firstclick
     env:
-      - CGO_ENABLED=0             
+      - CGO_ENABLED=0
     goos:
       - linux
       - windows
@@ -19,19 +16,18 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w                     
-      - -X main.version={{.Version}}  
+      - -s -w
 
 archives:
   - id: firstclick-archive
-    format: tar.gz               
+    format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         format: zip
 
 checksum:
-  name_template: "checksums.txt"  
+  name_template: "checksums.txt"
 
 changelog:
   sort: asc
@@ -42,7 +38,7 @@ changelog:
       - "^ci:"
 release:
   github:
-    owner: sachinggsingh 
-    name: sachinggsingh/FirstClick
+    owner: sachinggsingh
+    name: FirstClick
   draft: false
   prerelease: auto
