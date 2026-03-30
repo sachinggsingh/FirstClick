@@ -40,8 +40,6 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^ci:"
-      
-
 release:
   github:
     owner: sachinggsingh 
