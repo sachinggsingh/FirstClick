@@ -30,7 +30,7 @@ jobs:
       - name: Verify dependencies
         run: |
           go mod tidy
-          git diff --exit-code
+          git diff go.mod go.sum --exit-code
 
       - name: Run go vet
         run: go vet ./...
