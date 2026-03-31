@@ -21,6 +21,7 @@ RUN apk add --no-cache ca-certificates
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=builder /app/firstclick /app/firstclick
+COPY --from=builder /app/static /app/static
 
 RUN chown -R appuser:appgroup /app
 

@@ -1,18 +1,29 @@
 services:
-  redis:
-    container_name: redis
-    image: redis:7-alpine
+  firstclick:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firstclick
     ports:
-      - "6379:6379"
+      - "8080:8080"
     env_file:
       - .env
+    depends_on:
+      - redis
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
   redis-commander:
-    container_name: redis-commander
-    hostname: redis-commander
     image: ghcr.io/joeferner/redis-commander:latest
+    container_name: redis-commander
     restart: always
     environment:
       - REDIS_HOSTS=local:redis:6379
     ports:
       - "8081:8081"
-    user: redis
