@@ -212,12 +212,16 @@ func main() {
 		port = "8080"
 	}
 
+	// Sanitize port for logging to prevent Log Injection
+	cleanPort := filepath.Clean(port)
+
 	srv := &http.Server{
-		Addr:    "0.0.0.0:" + port,
-		Handler: router,
+		Addr:              "0.0.0.0:" + cleanPort,
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second, // Fix Slowloris
 	}
 
-	slog.Info("Server started", "port", port)
+	slog.Info("Server started", "port", cleanPort)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
