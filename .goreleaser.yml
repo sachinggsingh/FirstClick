@@ -20,11 +20,15 @@ builds:
 
 archives:
   - id: firstclick-archive
-    format: tar.gz
+    formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
+    files:
+      - README.md
+      - LICENSE
+      - static/**/*
 
 checksum:
   name_template: "checksums.txt"
@@ -42,3 +46,23 @@ release:
     name: FirstClick
   draft: false
   prerelease: auto
+
+dockers_v2:
+  - id: firstclick
+    # The image name (repository)
+    images:
+      - "ghcr.io/sachinggsingh/firstclick"
+    # Tags to apply to the images
+    tags:
+      - "{{.Version}}"
+      - "latest"
+    dockerfile: Dockerfile.goreleaser
+    # Target platforms for the multi-arch manifest
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    # Annotations/Labels for the image
+    labels:
+      org.opencontainers.image.title: "{{.ProjectName}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.source: "{{.GitURL}}"
