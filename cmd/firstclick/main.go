@@ -221,7 +221,7 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second, // Fix Slowloris
 	}
 
-	slog.Info("Server started", "port", cleanPort)
+	// slog.Info("Server started", "port", cleanPort)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
