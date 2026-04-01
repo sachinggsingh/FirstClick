@@ -1136,7 +1136,6 @@
       // ── Hold / Confirm / Release ──
       function holdSeat(seatID) {
         if (activeSession) {
-
           return;
         }
         api('POST', `/movies/${selectedMovie.id}/seats/${seatID}/hold`, { user_id: userID })
@@ -1152,9 +1151,11 @@
             fetchSeats();
             renderCheckout();
             startTimer();
-
           })
-
+          .catch(err => {
+            toast('error', 'Hold failed', err.message || 'Unable to hold seat');
+            fetchSeats();
+          });
       }
 
       function confirmSeat() {

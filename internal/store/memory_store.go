@@ -67,6 +67,7 @@ func (r *RedisStore) Hold(booking model.Booking) (model.Booking, error) {
 	// Map session -> seat key so confirm/release can locate the seat booking.
 	// TTL mirrors the hold TTL; confirm will persist both keys.
 	if err := r.rdb.Set(ctx, r.sessionKey(id), seatKey, defaultHold).Err(); err != nil {
+		_ = r.rdb.Del(ctx, seatKey).Err()
 		return model.Booking{}, err
 	}
 

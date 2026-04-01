@@ -47,13 +47,13 @@ func (bs *BookingService) Book(ctx context.Context, booking *model.Booking) (mod
 	if session.ID == "" {
 		if bs.logger != nil {
 			bs.logger.Warn(
-				"Seat already booked",
+				"Seat already held",
 				"seat_id", booking.SeatID,
 				"movie_id", booking.MovieID,
 				"user_id", booking.UserID,
 			)
 		}
-		return model.SeatBooked, fmt.Errorf("seat %s is already booked", booking.SeatID)
+		return model.SeatBooked, fmt.Errorf("seat %s is already held or confirmed", booking.SeatID)
 	}
 
 	// Copy the stored session details back to the caller (session_id, expires_at, etc.).
