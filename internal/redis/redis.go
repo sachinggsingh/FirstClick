@@ -11,17 +11,23 @@ import (
 
 func ConnectToRedis() (*redis.Client, error) {
 	var ctx = context.Background()
-	rdb := redis.NewClient(&redis.Options{
-		Addr: strings.TrimSpace(os.Getenv("REDIS_ADDR")),
-		// Password: strings.TrimSpace(os.Getenv("REDIS_PASS")),
-		// DB: 0,
-	})
 
-	_, err := rdb.Ping(ctx).Result()
+	redisURL := strings.TrimSpace(os.Getenv("REDIS_URL"))
+
+	opts, err := redis.ParseURL(redisURL)
 	if err != nil {
-		logger.NewLogger().Error("Error in Connecting with REDIS")
+		logger.NewLogger().Error("Invalid Redis URL")
 		return nil, err
 	}
+
+	rdb := redis.NewClient(opts)
+
+	_, err = rdb.Ping(ctx).Result()
+	if err != nil {
+		logger.NewLogger().Error("Error connecting to Redis")
+		return nil, err
+	}
+
 	logger.NewLogger().Info("Connected to Redis")
 	return rdb, nil
 }
