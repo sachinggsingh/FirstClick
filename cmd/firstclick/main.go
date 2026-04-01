@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -54,6 +55,21 @@ func main() {
 	staticDir := "./static"
 	indexPath := filepath.Join(staticDir, "index.html")
 	router.Static("/static", staticDir)
+
+	router.GET("/config.js", func(c *gin.Context) {
+		backendOrigin := strings.TrimSpace(os.Getenv("BACKEND_ORIGIN"))
+		backendOrigin = strings.TrimRight(backendOrigin, "/")
+		if backendOrigin == "" {
+			scheme := "http"
+			if c.Request.TLS != nil || strings.EqualFold(c.Request.Header.Get("X-Forwarded-Proto"), "https") {
+				scheme = "https"
+			}
+			backendOrigin = scheme + "://" + c.Request.Host
+		}
+
+		c.Header("Content-Type", "application/javascript; charset=utf-8")
+		c.String(http.StatusOK, "window.APP_CONFIG = { backendOrigin: %q };", backendOrigin)
+	})
 
 	seatsHub := realtime.NewSeatsHub()
 	router.GET("/ws/seats", func(c *gin.Context) {

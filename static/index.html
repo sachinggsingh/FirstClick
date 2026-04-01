@@ -910,16 +910,14 @@
       </div>
     </div>
 
+    <script src="/config.js"></script>
     <script>
     (function () {
       // ── State ──
       const userID = crypto.randomUUID().replace(/-/g,'').slice(0,12);
       document.getElementById('userBadge').textContent = userID.slice(0,8) + '…';
 
-      // If someone opens this page from a different dev-server port (e.g. 3000),
-      // we still want it to talk to the booking backend running on 8080.
-      const BACKEND_ORIGIN =
-        location.port === '8080' ? location.origin : 'http://localhost:8080';
+      const BACKEND_ORIGIN = window.APP_CONFIG?.backendOrigin || location.origin;
 
       let movies = [], selectedMovie = null, activeSession = null;
       let timerInterval = null, timerDuration = 0, timerStart = null;
