@@ -55,11 +55,11 @@ func (r *RedisStore) Hold(booking model.Booking) (model.Booking, error) {
 		return model.Booking{}, err
 	}
 
-	ok, err := r.rdb.SetNX(ctx, seatKey, val, defaultHold).Result()
+	res, err := r.rdb.Set(ctx, seatKey, val, defaultHold).Result()
 	if err != nil {
 		return model.Booking{}, err
 	}
-	if !ok {
+	if res != "OK" {
 		// Seat already held/confirmed (key exists)
 		return model.Booking{}, nil
 	}

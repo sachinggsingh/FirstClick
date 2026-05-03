@@ -86,7 +86,10 @@ func setupTestRouter() *gin.Engine {
 	router := gin.Default()
 
 	router.GET("/movies", func(c *gin.Context) {
-		json.NewEncoder(c.Writer).Encode(movies)
+		if err := json.NewEncoder(c.Writer).Encode(movies); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to encode response"})
+			return
+		}
 	})
 
 	router.GET("/config.js", func(c *gin.Context) {
