@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func closeResponseBody(resp *http.Response) {
+	if err := resp.Body.Close(); err != nil {
+		fmt.Println("Error in closing the resp.Body", err)
+	}
+}
 func TestMoviesEndpoint(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -21,7 +27,7 @@ func TestMoviesEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to make request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)
@@ -64,7 +70,7 @@ func TestConfigEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to make request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", resp.StatusCode)

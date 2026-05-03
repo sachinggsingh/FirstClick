@@ -38,8 +38,7 @@ jobs:
         run: go mod tidy
 
       - name: Run Tests with Coverage
-        run: go test ./... -v -coverprofile=coverage.out
-
+        run: go test ./... -v -cover
       - name: Show coverage summary
         run: go tool cover -func=coverage.out
 
