@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/sachinggsingh/firstclick/internal/logger"
 	"github.com/sachinggsingh/firstclick/internal/model"
@@ -13,7 +12,6 @@ import (
 // BookingService provides booking operations backed by Redis.
 // It implements model.BookingSeat.
 type BookingService struct {
-	mu     sync.Mutex
 	rdb    *store.RedisStore
 	logger *logger.Logger
 }
@@ -33,11 +31,7 @@ func (bs *BookingService) Book(ctx context.Context, booking *model.Booking) (mod
 		return model.SeatAvailable, fmt.Errorf("seat_id is required")
 	}
 
-	// Service-level lock prevents any accidental non-atomic usage of the booking input,
-	// but the real "only one winner" rule is enforced by Redis NX in RedisStore.Hold.
-	bs.mu.Lock()
-	defer bs.mu.Unlock()
-
+	// Exactly one winner across processes/instances is enforced by SetNX on the seat key in RedisStore.Hold.
 	session, err := bs.rdb.Hold(*booking)
 	if err != nil {
 		return model.SeatAvailable, err

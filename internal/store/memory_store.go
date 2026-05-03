@@ -55,13 +55,13 @@ func (r *RedisStore) Hold(booking model.Booking) (model.Booking, error) {
 		return model.Booking{}, err
 	}
 
-	res, err := r.rdb.Set(ctx, seatKey, val, defaultHold).Result()
-	if err != nil {
-		return model.Booking{}, err
-	}
-	if res != "OK" {
-		// Seat already held/confirmed (key exists)
+	_, err = r.rdb.SetArgs(ctx, seatKey, val, redis.SetArgs{TTL: defaultHold, Mode: string(redis.NX)}).Result()
+	switch {
+	case err == redis.Nil:
+		// SET ... NX skipped: seat already held or confirmed (key existed)
 		return model.Booking{}, nil
+	case err != nil:
+		return model.Booking{}, err
 	}
 
 	// Map session -> seat key so confirm/release can locate the seat booking.
