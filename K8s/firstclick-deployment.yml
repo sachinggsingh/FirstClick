@@ -1,31 +1,70 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: firstclick
   labels:
     app: firstclick-deployment
+
 spec:
   replicas: 3
+
   selector:
     matchLabels:
       app: firstclick
+
   template:
     metadata:
       labels:
         app: firstclick
+
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
       containers:
-      - name: firstclick
-        image: sachinggsingh/firstclick
-        ports:
-        - containerPort: 80
-        envFrom:
-        - configMapRef:
-            name: firstclick-configmap
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-          requests:
-            memory: "128Mi"
-            cpu: "500m"
+        - name: firstclick
+          image: sachinggsingh/firstclick:v1
+
+          ports:
+            - containerPort: 8080
+
+          envFrom:
+            - configMapRef:
+                name: firstclick-configmap
+
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+
+            capabilities:
+              drop:
+                - ALL
+
+            seccompProfile:
+              type: RuntimeDefault
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -17,4 +17,24 @@ spec:
       requests:
         memory: "128Mi"
         cpu: "500m"
- 
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      capailities:
+        drop:
+          - ALL   
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 10
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 10
+
+    
