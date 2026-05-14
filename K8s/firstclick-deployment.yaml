@@ -3,6 +3,7 @@ kind: Deployment
 
 metadata:
   name: firstclick
+  namespace: firstclick
   labels:
     app: firstclick-deployment
 
@@ -27,7 +28,7 @@ spec:
 
       containers:
         - name: firstclick
-          image: sachinggsingh/firstclick:v1
+          image: sachinggsingh/firstclick:latest
 
           ports:
             - containerPort: 8080
