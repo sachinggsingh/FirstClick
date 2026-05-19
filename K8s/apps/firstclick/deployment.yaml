@@ -5,7 +5,7 @@ metadata:
   name: firstclick
   namespace: firstclick
   labels:
-    app: firstclick-deployment
+    app: firstclick
 
 spec:
   replicas: 3
